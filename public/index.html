@@ -13,18 +13,46 @@
         #controls {
             margin-top: 10px;
         }
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #modal-content button {
+            margin-top: 10px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
     <video id="local-video" autoplay muted></video>
     <video id="remote-video" autoplay></video>
     <div id="controls">
-        <input type="text" id="room-id" placeholder="Enter room ID">
-        <button id="join-room-button">Join Room</button>
         <button id="call-button">Call</button>
         <button id="hangup-button">Hang Up</button>
         <button id="mute-audio-button">Mute Audio</button>
         <button id="stop-video-button">Stop Video</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal">
+        <div id="modal-content">
+            <p>Incoming call...</p>
+            <button id="ok-button">OK</button>
+            <button id="no-button">No</button>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -34,10 +62,13 @@
         const remoteVideo = document.getElementById('remote-video');
         const callButton = document.getElementById('call-button');
         const hangupButton = document.getElementById('hangup-button');
-        const joinRoomButton = document.getElementById('join-room-button');
-        const roomIdInput = document.getElementById('room-id');
         const muteAudioButton = document.getElementById('mute-audio-button');
         const stopVideoButton = document.getElementById('stop-video-button');
+        const modal = document.getElementById('modal');
+        const okButton = document.getElementById('ok-button');
+        const noButton = document.getElementById('no-button');
+
+        const roomId = '12'; // Predefined room ID
 
         let localStream;
         let peerConnection;
@@ -46,47 +77,60 @@
         };
         let isMuted = false;
         let isVideoStopped = false;
+        let callPending = false;
 
-        joinRoomButton.addEventListener('click', () => {
-            const roomId = roomIdInput.value;
-            if (roomId) {
-                socket.emit('joinRoom', roomId);
+        // Join room automatically with the predefined room ID
+        socket.emit('joinRoom', roomId);
+        let called=false;
+        async function axa(){
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localVideo.srcObject = localStream;
+
+                peerConnection = new RTCPeerConnection(configuration);
+
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit('candidate', roomId, event.candidate);
+                    }
+                };
+
+                peerConnection.ontrack = (event) => {
+                    remoteVideo.srcObject = event.streams[0];
+                };
+
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+               
+                socket.emit('offer', roomId, offer);
+               
+             
+        }
+        callButton.addEventListener('click', async () => {
+            try {
+              
+             
+                if(!called)
+                {axa();called=true;}
+            } catch (error) {
+                console.error('Error starting call:', error);
+                alert('Error starting call. Please check your camera and microphone.');
             }
         });
 
-        callButton.addEventListener('click', async () => {
-            const roomId = roomIdInput.value;
-            if (!roomId) return alert('Please enter a room ID.');
-
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            localVideo.srcObject = localStream;
-
-            peerConnection = new RTCPeerConnection(configuration);
-
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit('candidate', roomId, event.candidate);
-                }
-            };
-
-            peerConnection.ontrack = (event) => {
-                remoteVideo.srcObject = event.streams[0];
-            };
-
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
-
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-
-            socket.emit('offer', roomId, offer);
-        });
-
         hangupButton.addEventListener('click', () => {
-            peerConnection.close();
-            peerConnection = null;
-            remoteVideo.srcObject = null;
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+                remoteVideo.srcObject = null;
+
+                // Notify other clients to reload
+                socket.emit('hangup', roomId);
+            }
+            location.reload(); // Reload the page
         });
 
         muteAudioButton.addEventListener('click', () => {
@@ -110,14 +154,15 @@
                 }
             }
         });
-
+let x=0;
         socket.on('offer', async (offer) => {
+           
             if (!peerConnection) {
                 peerConnection = new RTCPeerConnection(configuration);
 
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
-                        socket.emit('candidate', roomIdInput.value, event.candidate);
+                        socket.emit('candidate', roomId, event.candidate);
                     }
                 };
 
@@ -126,23 +171,78 @@
                 };
             }
 
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
+            
+           // Show the modal and prevent further actions until OK or No is clicked
+           if(called)
+           {  try {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
 
-            socket.emit('answer', roomIdInput.value, answer);
+                        socket.emit('answer', roomId, answer);
+                        modal.style.display = 'none'; // Hide the modal
+                        callPending = false;
+                       
+                    }
+                     catch (error) {
+                        console.error('Error handling offer:', error);
+                        alert('Error handling incoming call.');
+                    }}
+                  else
+           {
+            modal.style.display = 'flex';
+            callPending = true;
+           okButton.addEventListener('click', async () => {
+                if (callPending) {
+                    try {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+
+                        socket.emit('answer', roomId, answer);
+                        modal.style.display = 'none'; // Hide the modal
+                        callPending = false;
+                        if(!called){
+                        axa()
+                        called=true;
+                    }
+                    } catch (error) {
+                        console.error('Error handling offer:', error);
+                        alert('Error handling incoming call.');
+                    }
+                }
+            });
+
+            noButton.addEventListener('click', () => {
+                if (callPending) {
+                    // Emit hangup and close the modal
+                    socket.emit('hangup', roomId);
+                    modal.style.display = 'none'; // Hide the modal
+                    callPending = false;
+                }
+            });}
         });
 
         socket.on('answer', async (answer) => {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                
+            } catch (error) {
+                console.error('Error handling answer:', error);
+            }
         });
 
         socket.on('candidate', async (candidate) => {
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (e) {
-                console.error('Error adding ice candidate:', e);
+            } catch (error) {
+                console.error('Error adding ice candidate:', error);
             }
+        });
+
+        // Handle hangup event from server
+        socket.on('hangup', () => {
+            location.reload(); // Reload the page
         });
     </script>
 </body>
