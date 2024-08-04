@@ -22,7 +22,7 @@ io.on('connection', (socket) => {
         rooms[roomId].push(socket.id);
         console.log(`User ${socket.id} joined room ${roomId}`);
     });
-
+  
     // Relay signaling messages between clients in the same room
     socket.on('offer', (roomId, offer) => {
         socket.to(roomId).emit('offer', offer);
@@ -34,6 +34,11 @@ io.on('connection', (socket) => {
 
     socket.on('candidate', (roomId, candidate) => {
         socket.to(roomId).emit('candidate', candidate);
+    });
+
+    // Handle hangup event
+    socket.on('hangup', (roomId) => {
+        socket.to(roomId).emit('hangup');
     });
 
     socket.on('disconnect', () => {
