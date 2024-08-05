@@ -40,6 +40,12 @@ io.on('connection', (socket) => {
     socket.on('hangup', (roomId) => {
         socket.to(roomId).emit('hangup');
     });
+    socket.on('mute', (roomId,isMuted) => {
+        socket.to(roomId).emit('mute',isMuted);
+    });
+    socket.on('video', (roomId,isVideoStopped) => {
+        socket.to(roomId).emit('video',isVideoStopped);
+    });
 
     socket.on('disconnect', () => {
         console.log('User disconnected');
