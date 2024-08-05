@@ -5,154 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebRTC Call</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(to right, #6a11cb, #2575fc);
-            color: white;
-            overflow: hidden; /* Ensure no scrollbars appear */
-        }
-        #video-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 70%; /* Adjust as needed */
-            height: 80%; /* Adjust as needed */
-            position: relative;
-            background: rgba(0, 0, 0, 0.7); /* Darker background for contrast */
-            border-radius: 15px; /* Rounded corners */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Soft shadow for depth */
-            overflow: hidden; /* Ensure no overflow */
-        }
-        #video-section {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: calc(100% - 60px); /* Adjust for controls height */
-            position: relative;
-            overflow: hidden;
-        }
-        #remote-video {
-            width: 100%;
-            height: 100%;
-            border: 2px solid #fff;
-            border-radius: 15px; /* Rounded corners */
-            object-fit: cover; /* Ensure the video covers the container */
-        }
-        #local-video {
-            position: absolute;
-            bottom: 10px; /* Adjust position as needed */
-            right: 10px; /* Adjust position as needed */
-            width: 30%; /* Adjust size as needed */
-            height: 30%;
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: white;
+        overflow: hidden; /* Ensure no scrollbars appear */
+    }
+    #video-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%; /* Full width for the popup */
+        height: 100%; /* Full height for the popup */
+        background: rgba(0, 0, 0, 0.7); /* Darker background for contrast */
+        border-radius: 15px; /* Rounded corners */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Soft shadow for depth */
+        overflow: hidden; /* Ensure no overflow */
+        position: relative; /* For absolute positioning of children */
+    }
+    #video-section {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        top:0%;
+        height: 100%; /* Adjust for controls height */
+        position: absolute;
+        overflow: hidden;
+    }
+    #remote-video {
+        width: 100%;
+        height: 90%;
+        top:0;
+        border: 2px solid #fff;
+        border-radius: 15px; /* Rounded corners */
+        object-fit: cover; /* Ensure the video covers the container */
+    }
+    #local-video {
+    position: absolute;
+    bottom: 10%; /* Position from the bottom */
+    right: 10px; /* Position from the right */
+    max-width: 30%; /* Maximum width as a percentage of the container */
+    max-height: 30%; /* Maximum height as a percentage of the container */
+    border: 2px solid #fff;
+    border-radius: 15px; /* Rounded corners */
+    z-index: 10; /* Ensure local video is on top */
+    cursor: pointer; /* Show that this element is clickable */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Shadow for local video */
+    object-fit: contain; /* Maintain aspect ratio */
+}
 
-            border: 2px solid #fff;
-            border-radius: 10px; /* Rounded corners */
-            z-index: 10; /* Ensure local video is on top */
-            cursor: pointer; /* Show that this element is clickable */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Shadow for local video */
-        }
-        .video-label {
-            position: absolute;
-            background-color: transparent; /* Semi-transparent background */
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 10px;
-            font-weight: bold;
-            backdrop-filter: blur(5px); /* Optional blur effect */
-        }
-        #remote-label {
-            bottom: 10px;
-            left: 10px;
-        }
-        #local-label {
-            bottom: 10px;
-            right: 10px;
-            z-index: 100;
-        }
-        #controls {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7); /* Dark background for the controls */
-            border-radius: 15px; /* Rounded corners */
-            position: relative;
-            width: 100%;
-            justify-content: center;
-            bottom: 0; /* Stick to the bottom of the container */
-        }
-        button {
-            background-color: #2575fc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #6a11cb;
-        }
-        #modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        #modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 300px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Shadow for modal */
-        }
-        #modal-content p {
-            margin: 0;
-            font-size: 18px;
-        }
-        #modal-content button {
-            margin: 10px;
-        }
+    .video-label {
+        position: absolute;
+        background-color: transparent; /* Semi-transparent background */
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+        backdrop-filter: blur(5px); /* Optional blur effect */
+    }
+    #remote-label {
+        bottom: 10%;
+        left: 10px;
+        z-index: 100;
+    }
+    #local-label {
+        bottom: 10%;
+        right: 10px;
+        z-index: 100;
+    }
+    #controls {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 5px;
+        background: transparent; /* Dark background for the controls */
+        border-radius: 15px; /* Rounded corners */
+        position: absolute; 
+        top:90%;/* Stick to the bottom of the container */
+        bottom: 0; 
+        width: 100%;
+        justify-content: center;
+    }
+    button {
+        background-color: #2575fc;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #6a11cb;
+    }
+    #modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    #modal-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        width: 300px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Shadow for modal */
+    }
+    #modal-content p {
+        color: green;
+        margin: 0;
+        font-size: 18px;
+    }
+    #modal-content button {
+        margin: 10px;
+    }
+    #local-muted-label {
+    bottom: 10%; /* Center vertically */
+    right: 20px; /* Center horizontally */
+    transform: translate(-10%, -30%); /* Center label inside local video */
+    z-index: 100;
+    background-color: rgba(255, 0, 0, 0.7); /* Red background for visibility */
+    padding: 5px 10px; /* Padding for better visibility */
+}
+
+#remote-muted-label {
+    bottom: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Center label inside remote video */
+    z-index: 100;
+    background-color: rgba(255, 0, 0, 0.7); /* Red background for visibility */
+    padding: 5px 10px; /* Padding for better visibility */
+}
+    #popup-menu {
+        position: fixed; /* Fixed position for the popup */
+        display: none;
+        width: 80%; /* Adjust as needed */
+        height: 80%; /* Adjust as needed */
+        border: 1px solid #ccc;
+        border-radius: 15px;
+        background-color: rgba(0, 0, 0, 0.9); /* Dark background for better contrast */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        top: 10%; /* Center the popup */
+        left: 10%; /* Center the popup */
+        overflow: hidden; /* Ensure no overflow */
+    }
     </style>
 </head>
 <body>
-    <div id="video-container">
-        <div id="video-section">
-            <video id="remote-video" autoplay></video>
-            <div id="remote-label" class="video-label">Remote</div>
-            <video id="local-video" autoplay muted></video>
-            <div id="local-label" class="video-label">Me</div>
-        </div>
-        <div id="controls">
-            <button id="call-button">📞</button>
-            <button id="hangup-button" style="display: none;">❌</button>
-            <button id="mute-audio-button" style="display: none;">Mute Audio</button>
-            <button id="stop-video-button" style="display: none;">Stop Video</button>
+  
+    <div id="popup-menu">
+        <div id="video-container">
+            <div id="video-section">
+                <video id="remote-video" autoplay></video>
+                <div id="remote-label" class="video-label">Remote</div>
+                <video id="local-video" autoplay muted></video>
+                <div id="local-label" class="video-label">Me</div>
+                <div id="local-muted-label" class="video-label" style="display: none;">Muted</div>
+                <div id="remote-muted-label" class="video-label" style="display: none;">Muted</div>
+            </div>
+            <div id="controls">
+                <button id="hangup-button" >❌</button>
+                <button id="mute-audio-button" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-mic-mute" viewBox="0 0 16 16">
+                      <path d="M13 8c0 .564-.094 1.107-.266 1.613l-.814-.814A4 4 0 0 0 12 8V7a.5.5 0 0 1 1 0zm-5 4c.818 0 1.578-.245 2.212-.667l.718.719a5 5 0 0 1-2.43.923V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 1 0v1a4 4 0 0 0 4 4m3-9v4.879l-1-1V3a2 2 0 0 0-3.997-.118l-.845-.845A3.001 3.001 0 0 1 11 3"/>
+                      <path d="m9.486 10.607-.748-.748A2 2 0 0 1 6 8v-.878l-1-1V8a3 3 0 0 0 4.486 2.607m-7.84-9.253 12 12 .708-.708-12-12z"/>
+                    </svg>
+                  </button>
+                  
+                <button id="stop-video-button" style="display: none;">Stop Video</button>
+            </div>
         </div>
     </div>
-
+    <button id="call-button">📞</button>
+   
     <!-- Modal -->
     <div id="modal">
         <div id="modal-content">
-            <p>Incoming call...</p>
-            <button id="ok-button">OK</button>
-            <button id="no-button">No</button>
+            <p id="modal-message">Incoming call...</p>
+            <button id="ok-button">Accept</button>
+            <button id="no-button">Decline</button>
         </div>
     </div>
 
@@ -168,6 +215,7 @@
         const modal = document.getElementById('modal');
         const okButton = document.getElementById('ok-button');
         const noButton = document.getElementById('no-button');
+        const localMutedLabel = document.getElementById('local-muted-label');
         
         const roomId = '12'; // Predefined room ID
         
@@ -210,6 +258,7 @@
         }
         
         callButton.addEventListener('click', async () => {
+            document.getElementById('popup-menu').style.display='flex';
             try {
                 if (!called) {
                     await startCall();
@@ -223,6 +272,7 @@
         });
         
         hangupButton.addEventListener('click', () => {
+            
             if (peerConnection) {
                 peerConnection.close();
                 peerConnection = null;
@@ -238,6 +288,7 @@
                 if (audioTracks.length > 0) {
                     audioTracks[0].enabled = !audioTracks[0].enabled;
                     isMuted = !isMuted;
+                    socket.emit('mute', roomId, isMuted);
                     muteAudioButton.textContent = isMuted ? 'Unmute Audio' : 'Mute Audio';
                 }
             }
@@ -249,6 +300,7 @@
                 if (videoTracks.length > 0) {
                     videoTracks[0].enabled = !videoTracks[0].enabled;
                     isVideoStopped = !isVideoStopped;
+                    socket.emit('video',roomId,isVideoStopped);
                     stopVideoButton.textContent = isVideoStopped ? 'Start Video' : 'Stop Video';
                 }
             }
@@ -269,6 +321,7 @@
         }
         
         socket.on('offer', async (offer) => {
+           
             if (!peerConnection) {
                 peerConnection = new RTCPeerConnection(configuration);
         
@@ -293,13 +346,14 @@
                     callPending = false;
                 } catch (error) {
                     console.error('Error handling offer:', error);
-                    alert('Error handling incoming call.');
+                  
                 }
             } else {
                 modal.style.display = 'flex';
                 callPending = true;
         
                 okButton.addEventListener('click', async () => {
+                    document.getElementById('popup-menu').style.display='flex';
                     if (callPending) {
                         try {
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
@@ -315,7 +369,7 @@
                             }
                         } catch (error) {
                             console.error('Error handling offer:', error);
-                            alert('Error handling incoming call.');
+                           
                         }
                     }
                 });
@@ -331,6 +385,7 @@
         });
         
         socket.on('answer', async (answer) => {
+            
             try {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             } catch (error) {
@@ -345,20 +400,108 @@
                 console.error('Error adding ice candidate:', error);
             }
         });
+        
         localVideo.addEventListener('click', () => {
             const tempSrc = localVideo.srcObject;
             localVideo.srcObject = remoteVideo.srcObject;
             remoteVideo.srcObject = tempSrc;
-        
+            activescreen1=activescreen1===true?false:true;
             const tempLabel = document.getElementById('local-label').textContent;
             document.getElementById('local-label').textContent = document.getElementById('remote-label').textContent;
             document.getElementById('remote-label').textContent = tempLabel;
+            if(mute && off)
+           { document.getElementById('local-muted-label').style.display= document.getElementById('local-muted-label').style.display==='none'?'flex':'none';
+            document.getElementById('remote-muted-label').textContent = 'video audio off';
+            document.getElementById('remote-muted-label').style.display= document.getElementById('remote-muted-label').style.display==='none'?'flex':'none';
+            document.getElementById('local-muted-label').textContent = 'Video audio off';
+        }
+            else if(mute)
+           { document.getElementById('local-muted-label').style.display= document.getElementById('local-muted-label').style.display==='none'?'flex':'none';
+           document.getElementById('local-muted-label').textContent = 'muted';
+           document.getElementById('remote-muted-label').style.display= document.getElementById('remote-muted-label').style.display==='none'?'flex':'none';
+           document.getElementById('remote-muted-label').textContent = 'muted';
+        }
+        else if(off)
+           { document.getElementById('local-muted-label').style.display= document.getElementById('local-muted-label').style.display==='none'?'flex':'none';
+           document.getElementById('local-muted-label').textContent = 'Video off';
+            document.getElementById('remote-muted-label').style.display= document.getElementById('remote-muted-label').style.display==='none'?'flex':'none';
+            document.getElementById('remote-muted-label').textContent = 'video off';
+        }
+        else{}
+        
+        });
+        
+        let mute=false;
+        let off=false;
+        let activescreen1=true;
+        
+        socket.on('mute', async (isMuted) => {
+        if (activescreen1) {
+        
+            if(off){
+            const remoteLabel = document.getElementById('remote-muted-label');
+            remoteLabel.textContent = isMuted  ? 'Audio Video off' : 'video off'; 
+            }
+            else{
+                const remoteLabel = document.getElementById('remote-muted-label');
+            remoteLabel.style.display = isMuted ? 'block' : 'none';
+            remoteLabel.textContent = isMuted ? 'Muted ' : ''; 
+            }
+            
+            // Set text content based on mute status
+        } else {
+            if(off){
+            const remoteLabel = document.getElementById('local-muted-label');
+            remoteLabel.textContent = isMuted  ? 'Audio Video off' : 'video off'; 
+            }
+            else{
+                const remoteLabel = document.getElementById('local-muted-label');
+            remoteLabel.style.display = isMuted ? 'block' : 'none';
+            remoteLabel.textContent = isMuted ? 'Muted ' : ''; 
+            }// Set text content based on mute status
+        }
+        
+        // Toggle 'mute' state
+        mute = !mute;
+        });
+        
+        
+        socket.on('video', async (isVideoStopped) => {
+            if (activescreen1) {
+        
+        if(mute){
+        const remoteLabel = document.getElementById('remote-muted-label');
+        remoteLabel.textContent = isVideoStopped ? 'Audio Video off' : 'muted'; 
+        }
+        else{
+        const remoteLabel = document.getElementById('remote-muted-label');
+        remoteLabel.style.display = isVideoStopped ? 'block' : 'none';
+        remoteLabel.textContent = isVideoStopped ? 'video off ' : ''; 
+        }
+        
+        // Set text content based on mute status
+        } else {
+        if(mute){
+        const remoteLabel = document.getElementById('local-muted-label');
+        remoteLabel.textContent = isVideoStopped  ? 'Audio Video off' : 'muted'; 
+        }
+        else{
+        const remoteLabel = document.getElementById('local-muted-label');
+        remoteLabel.style.display = isVideoStopped ? 'block' : 'none';
+        remoteLabel.textContent = isVideoStopped ? 'video off ' : ''; 
+        }// Set text content based on mute status
+        }
+        // Toggle 'off' state
+        off = !off;
         });
         
         // Handle hangup event from server
         socket.on('hangup', () => {
-            location.reload(); // Reload the page
+          
+            
+            location.reload(); 
         });
+        
         </script>
 </body>
 </html>
