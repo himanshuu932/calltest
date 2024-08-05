@@ -14,7 +14,7 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     // Join a room
-    socket.on('joinRoom', (roomId) => {
+    socket.on('joinCall', (roomId) => {
         socket.join(roomId);
         if (!rooms[roomId]) {
             rooms[roomId] = [];
