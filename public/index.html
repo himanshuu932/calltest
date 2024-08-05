@@ -201,6 +201,208 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="index.js"></script>
+    <script>
+        const socket = io();
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+        const callButton = document.getElementById('call-button');
+        const hangupButton = document.getElementById('hangup-button');
+        const muteAudioButton = document.getElementById('mute-audio-button');
+        const stopVideoButton = document.getElementById('stop-video-button');
+        const modal = document.getElementById('modal');
+        const okButton = document.getElementById('ok-button');
+        const noButton = document.getElementById('no-button');
+        
+        const roomId = '12'; // Predefined room ID
+        
+        let localStream;
+        let peerConnection;
+        const configuration = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+        let isMuted = false;
+        let isVideoStopped = false;
+        let callPending = false;
+        
+        // Join room automatically with the predefined room ID
+        socket.emit('joinCall', roomId);
+        let called = false;
+        
+        async function startCall() {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideo.srcObject = localStream;
+        
+            peerConnection = new RTCPeerConnection(configuration);
+        
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('candidate', roomId, event.candidate);
+                }
+            };
+        
+            peerConnection.ontrack = (event) => {
+                remoteVideo.srcObject = event.streams[0];
+            };
+        
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+        
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            socket.emit('offer', roomId, offer);
+        }
+        
+        callButton.addEventListener('click', async () => {
+            try {
+                if (!called) {
+                    await startCall();
+                    called = true;
+                    updateButtonStates(true);
+                }
+            } catch (error) {
+                console.error('Error starting call:', error);
+                alert('Error starting call. Please check your camera and microphone.');
+            }
+        });
+        
+        hangupButton.addEventListener('click', () => {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+                remoteVideo.srcObject = null;
+                socket.emit('hangup', roomId);
+            }
+            location.reload(); // Reload the page
+        });
+        
+        muteAudioButton.addEventListener('click', () => {
+            if (localStream) {
+                const audioTracks = localStream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    audioTracks[0].enabled = !audioTracks[0].enabled;
+                    isMuted = !isMuted;
+                    muteAudioButton.textContent = isMuted ? 'Unmute Audio' : 'Mute Audio';
+                }
+            }
+        });
+        
+        stopVideoButton.addEventListener('click', () => {
+            if (localStream) {
+                const videoTracks = localStream.getVideoTracks();
+                if (videoTracks.length > 0) {
+                    videoTracks[0].enabled = !videoTracks[0].enabled;
+                    isVideoStopped = !isVideoStopped;
+                    stopVideoButton.textContent = isVideoStopped ? 'Start Video' : 'Stop Video';
+                }
+            }
+        });
+        
+        function updateButtonStates(callInProgress) {
+            if (callInProgress) {
+                callButton.style.display = 'none';
+                hangupButton.style.display = 'inline-block';
+                muteAudioButton.style.display = 'inline-block';
+                stopVideoButton.style.display = 'inline-block';
+            } else {
+                callButton.style.display = 'inline-block';
+                hangupButton.style.display = 'none';
+                muteAudioButton.style.display = 'none';
+                stopVideoButton.style.display = 'none';
+            }
+        }
+        
+        socket.on('offer', async (offer) => {
+            if (!peerConnection) {
+                peerConnection = new RTCPeerConnection(configuration);
+        
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit('candidate', roomId, event.candidate);
+                    }
+                };
+        
+                peerConnection.ontrack = (event) => {
+                    remoteVideo.srcObject = event.streams[0];
+                };
+            }
+        
+            if (called) {
+                try {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('answer', roomId, answer);
+                    modal.style.display = 'none'; // Hide the modal
+                    callPending = false;
+                } catch (error) {
+                    console.error('Error handling offer:', error);
+                    alert('Error handling incoming call.');
+                }
+            } else {
+                modal.style.display = 'flex';
+                callPending = true;
+        
+                okButton.addEventListener('click', async () => {
+                    if (callPending) {
+                        try {
+                            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                            const answer = await peerConnection.createAnswer();
+                            await peerConnection.setLocalDescription(answer);
+                            socket.emit('answer', roomId, answer);
+                            modal.style.display = 'none'; // Hide the modal
+                            callPending = false;
+                            if (!called) {
+                                await startCall();
+                                called = true;
+                                updateButtonStates(true);
+                            }
+                        } catch (error) {
+                            console.error('Error handling offer:', error);
+                            alert('Error handling incoming call.');
+                        }
+                    }
+                });
+        
+                noButton.addEventListener('click', () => {
+                    if (callPending) {
+                        socket.emit('hangup', roomId);
+                        modal.style.display = 'none'; // Hide the modal
+                        callPending = false;
+                    }
+                });
+            }
+        });
+        
+        socket.on('answer', async (answer) => {
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            } catch (error) {
+                console.error('Error handling answer:', error);
+            }
+        });
+        
+        socket.on('candidate', async (candidate) => {
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (error) {
+                console.error('Error adding ice candidate:', error);
+            }
+        });
+        localVideo.addEventListener('click', () => {
+            const tempSrc = localVideo.srcObject;
+            localVideo.srcObject = remoteVideo.srcObject;
+            remoteVideo.srcObject = tempSrc;
+        
+            const tempLabel = document.getElementById('local-label').textContent;
+            document.getElementById('local-label').textContent = document.getElementById('remote-label').textContent;
+            document.getElementById('remote-label').textContent = tempLabel;
+        });
+        
+        // Handle hangup event from server
+        socket.on('hangup', () => {
+            location.reload(); // Reload the page
+        });
+        </script>
 </body>
 </html>
