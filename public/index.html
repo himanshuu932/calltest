@@ -402,9 +402,15 @@
         });
         
         localVideo.addEventListener('click', () => {
-            const tempSrc = localVideo.srcObject;
-            localVideo.srcObject = remoteVideo.srcObject;
-            remoteVideo.srcObject = tempSrc;
+            const localVideoTrack = localStream.getVideoTracks()[0];
+        const remoteVideoTrack = remoteVideo.srcObject ? remoteVideo.srcObject.getVideoTracks()[0] : null;
+
+        // Swap video streams
+        if (remoteVideoTrack) {
+            remoteVideo.srcObject = new MediaStream([localVideoTrack]);
+        }
+
+        localVideo.srcObject = new MediaStream([remoteVideoTrack]);
             activescreen1=activescreen1===true?false:true;
             const tempLabel = document.getElementById('local-label').textContent;
             document.getElementById('local-label').textContent = document.getElementById('remote-label').textContent;
