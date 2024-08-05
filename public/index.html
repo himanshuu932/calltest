@@ -22,10 +22,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 90%; /* Adjust width for smaller screens */
-            max-width: 800px; /* Set a maximum width */
-            height: 90%; /* Adjust height */
-            /* Set a maximum height */
+            width: 70%; /* Adjust as needed */
+            height: 80%; /* Adjust as needed */
             position: relative;
             background: rgba(0, 0, 0, 0.7); /* Darker background for contrast */
             border-radius: 15px; /* Rounded corners */
@@ -36,15 +34,13 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            top:0;
-            height: 80%; /* Adjust for controls height */
+            height: calc(100% - 60px); /* Adjust for controls height */
             position: relative;
             overflow: hidden;
         }
         #remote-video {
             width: 100%;
             height: 100%;
-            
             border: 2px solid #fff;
             border-radius: 15px; /* Rounded corners */
             object-fit: cover; /* Ensure the video covers the container */
@@ -55,6 +51,7 @@
             right: 10px; /* Adjust position as needed */
             width: 30%; /* Adjust size as needed */
             height: 30%;
+
             border: 2px solid #fff;
             border-radius: 10px; /* Rounded corners */
             z-index: 10; /* Ensure local video is on top */
@@ -63,7 +60,7 @@
         }
         .video-label {
             position: absolute;
-            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+            background-color: transparent; /* Semi-transparent background */
             color: #fff;
             padding: 5px 10px;
             border-radius: 5px;
@@ -87,20 +84,19 @@
             padding: 10px;
             background: rgba(0, 0, 0, 0.7); /* Dark background for the controls */
             border-radius: 15px; /* Rounded corners */
-            position: absolute;
+            position: relative;
             width: 100%;
-            bottom: 0; /* Stick to the bottom of the container */
-            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.4); /* Shadow for controls */
             justify-content: center;
+            bottom: 0; /* Stick to the bottom of the container */
         }
         button {
             background-color: #2575fc;
             color: white;
             border: none;
-            padding: 10px 15px; /* Adjusted padding */
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px; /* Adjusted font size */
+            font-size: 16px;
             transition: background-color 0.3s ease;
         }
         button:hover {
@@ -123,8 +119,7 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            width: 80%; /* Adjust width for responsiveness */
-            max-width: 400px; /* Set a maximum width */
+            width: 300px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Shadow for modal */
         }
         #modal-content p {
@@ -133,45 +128,6 @@
         }
         #modal-content button {
             margin: 10px;
-            padding: 10px 20px; /* Adjusted padding */
-            font-size: 14px; /* Adjusted font size */
-        }
-
-        @media (max-width: 768px) {
-            #video-container {
-                width: 95%; /* Adjust width for smaller screens */
-                height: 90%; /* Adjust height */
-            }
-            #local-video {
-                width: 40%; /* Adjust size */
-                height: 40%; /* Adjust size */
-            }
-            .video-label {
-                font-size: 8px; /* Adjust font size */
-            }
-            button {
-                font-size: 14px; /* Adjust font size */
-                padding: 8px 12px; /* Adjust padding */
-            }
-        }
-
-        @media (max-width: 480px) {
-            #video-container {
-                width: 100%; /* Full width for very small screens */
-                height: 100%; /* Full height */
-                border-radius: 0; /* Remove border-radius for small screens */
-            }
-            #local-video {
-                width: 50%; /* Adjust size */
-                height: 50%; /* Adjust size */
-            }
-            .video-label {
-                font-size: 6px; /* Adjust font size */
-            }
-            button {
-                font-size: 12px; /* Adjust font size */
-                padding: 6px 10px; /* Adjust padding */
-            }
         }
     </style>
 </head>
@@ -201,7 +157,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
+    <script >
         const socket = io();
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
