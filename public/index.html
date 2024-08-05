@@ -402,34 +402,9 @@
         });
         
         localVideo.addEventListener('click', () => {
-            const tempVideoSrc = localVideo.srcObject;
-    const tempAudioTracks = (localVideo.srcObject ? localVideo.srcObject.getAudioTracks() : []);
-
-    const remoteVideoSrc = remoteVideo.srcObject;
-    const remoteAudioTracks = (remoteVideo.srcObject ? remoteVideo.srcObject.getAudioTracks() : []);
-
-    // Swap video sources
-    localVideo.srcObject = remoteVideo.srcObject;
-    remoteVideo.srcObject = tempVideoSrc;
-
-    // Swap audio tracks
-    if (localVideo.srcObject) {
-        localVideo.srcObject.getTracks().forEach(track => {
-            if (track.kind === 'audio') {
-                track.stop(); // Stop existing audio tracks
-            }
-        });
-        localVideo.srcObject.addTrack(...remoteAudioTracks); // Add remote audio tracks to local video
-    }
-
-    if (remoteVideo.srcObject) {
-        remoteVideo.srcObject.getTracks().forEach(track => {
-            if (track.kind === 'audio') {
-                track.stop(); // Stop existing audio tracks
-            }
-        });
-        remoteVideo.srcObject.addTrack(...tempAudioTracks); // Add temp audio tracks to remote video
-    }
+            const tempSrc = localVideo.srcObject;
+            localVideo.srcObject = remoteVideo.srcObject;
+            remoteVideo.srcObject = tempSrc;
             activescreen1=activescreen1===true?false:true;
             const tempLabel = document.getElementById('local-label').textContent;
             document.getElementById('local-label').textContent = document.getElementById('remote-label').textContent;
