@@ -410,13 +410,7 @@
     localVideo.srcObject = remoteVideo.srcObject;
     remoteVideo.srcObject = tempSrc;
 
-    // Update audio tracks
-    if (remoteVideo.srcObject) {
-        remoteVideo.srcObject.getAudioTracks().forEach(track => track.enabled = true);
-    }
-    if (localVideo.srcObject) {
-        localVideo.srcObject.getAudioTracks().forEach(track => track.enabled = true);
-    }
+  
     
             activescreen1=activescreen1===true?false:true;
             const tempLabel = document.getElementById('local-label').textContent;
