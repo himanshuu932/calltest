@@ -403,8 +403,21 @@
         
         localVideo.addEventListener('click', () => {
             const tempSrc = localVideo.srcObject;
-            localVideo.srcObject = remoteVideo.srcObject;
-            remoteVideo.srcObject = tempSrc;
+    const tempAudioSrc = localVideo.srcObject ? localVideo.srcObject.getAudioTracks() : [];
+    const tempRemoteAudioSrc = remoteVideo.srcObject ? remoteVideo.srcObject.getAudioTracks() : [];
+
+    // Swap video and audio sources
+    localVideo.srcObject = remoteVideo.srcObject;
+    remoteVideo.srcObject = tempSrc;
+
+    // Update audio tracks
+    if (remoteVideo.srcObject) {
+        remoteVideo.srcObject.getAudioTracks().forEach(track => track.enabled = true);
+    }
+    if (localVideo.srcObject) {
+        localVideo.srcObject.getAudioTracks().forEach(track => track.enabled = true);
+    }
+    
             activescreen1=activescreen1===true?false:true;
             const tempLabel = document.getElementById('local-label').textContent;
             document.getElementById('local-label').textContent = document.getElementById('remote-label').textContent;
