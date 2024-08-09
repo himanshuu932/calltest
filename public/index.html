@@ -39,27 +39,7 @@
         position: absolute;
         overflow: hidden;
     }
-    #remote-video {
-        width: 100%;
-        height: 90%;
-        top:0;
-        border: 2px solid #fff;
-        border-radius: 15px; /* Rounded corners */
-        object-fit: cover; /* Ensure the video covers the container */
-    }
-    #local-video {
-    position: absolute;
-    bottom: 10%; /* Position from the bottom */
-    right: 10px; /* Position from the right */
-    max-width: 30%; /* Maximum width as a percentage of the container */
-    max-height: 30%; /* Maximum height as a percentage of the container */
-    border: 2px solid #fff;
-    border-radius: 15px; /* Rounded corners */
-    z-index: 10; /* Ensure local video is on top */
-    cursor: pointer; /* Show that this element is clickable */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Shadow for local video */
-    object-fit: contain; /* Maintain aspect ratio */
-}
+  
 
     .video-label {
         position: absolute;
@@ -423,32 +403,17 @@
         else{}
         
         } 
-        localVideo.addEventListener('click', async () => {
-    activescreen1 = !activescreen1; // Toggle activescreen1
-    changelabel(); // Assuming this function is defined elsewhere
-    await permanentlySwapInlineStyles(localVideo,remoteVideo); // Await if it's async
-});
-
-function getInlineStyles(element) {
-    return element.style.cssText;
-}
-
-function setInlineStyles(element, styles) {
-    element.style.cssText = styles;
-}
-
-function permanentlySwapInlineStyles(element1, element2) {
-    const styles1 = getInlineStyles(element1);
-    const styles2 = getInlineStyles(element2);
-
-    setInlineStyles(element1, styles2);
-    setInlineStyles(element2, styles1);
- 
-}
-
-
-
-        let mute=false;
+        localVideo.addEventListener('click', () => {
+            
+            activescreen1=activescreen1===true?false:true;
+           changelabel();
+         try {
+            swapStyles();
+         } catch (error) {
+            alert(error)
+         }
+        });
+       let mute=false;
         let off=false;
         let activescreen1=true;
         
@@ -518,7 +483,104 @@ function permanentlySwapInlineStyles(element1, element2) {
             
             location.reload(); 
         });
-        
+        function setcss1(){
+          // Set CSS properties for remote video
+    remoteVideo.style.width = '100%';
+    remoteVideo.style.height = '90%';
+    remoteVideo.style.top = '0';
+    remoteVideo.style.border = '2px solid #fff';
+    remoteVideo.style.borderRadius = '15px'; // Rounded corners
+    remoteVideo.style.objectFit = 'cover'; // Ensure the video covers the container
+
+    // Set CSS properties for local video
+    localVideo.style.position = 'absolute';
+    localVideo.style.bottom = '10%'; // Position from the bottom
+    localVideo.style.right = '10px'; // Position from the right
+    localVideo.style.maxWidth = '30%'; // Maximum width as a percentage of the container
+    localVideo.style.maxHeight = '30%'; // Maximum height as a percentage of the container
+    localVideo.style.border = '2px solid #fff';
+    localVideo.style.borderRadius = '15px'; // Rounded corners
+    localVideo.style.zIndex = '10'; // Ensure local video is on top
+    localVideo.style.cursor = 'pointer'; // Show that this element is clickable
+    localVideo.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.5)'; // Shadow for local video
+    localVideo.style.objectFit = 'contain'; // Maintain aspect ratio
+    }
+
+    function swapStyles() {
+        // Get current styles
+        const remoteStyles = {
+            width: remoteVideo.style.width,
+            height: remoteVideo.style.height,
+            top: remoteVideo.style.top,
+            border: remoteVideo.style.border,
+            borderRadius: remoteVideo.style.borderRadius,
+            objectFit: remoteVideo.style.objectFit,
+            position: remoteVideo.style.position,
+            bottom: remoteVideo.style.bottom,
+            right: remoteVideo.style.right,
+            maxWidth: remoteVideo.style.maxWidth,
+            maxHeight: remoteVideo.style.maxHeight,
+            zIndex: remoteVideo.style.zIndex,
+            cursor: remoteVideo.style.cursor,
+            boxShadow: remoteVideo.style.boxShadow
+        };
+
+        const localStyles = {
+            width: localVideo.style.width,
+            height: localVideo.style.height,
+            top: localVideo.style.top,
+            border: localVideo.style.border,
+            borderRadius: localVideo.style.borderRadius,
+            objectFit: localVideo.style.objectFit,
+            position: localVideo.style.position,
+            bottom: localVideo.style.bottom,
+            right: localVideo.style.right,
+            maxWidth: localVideo.style.maxWidth,
+            maxHeight: localVideo.style.maxHeight,
+            zIndex: localVideo.style.zIndex,
+            cursor: localVideo.style.cursor,
+            boxShadow: localVideo.style.boxShadow
+        };
+
+        // Apply remote styles to localVideo
+        localVideo.style.width = remoteStyles.width;
+        localVideo.style.height = remoteStyles.height;
+        localVideo.style.top = remoteStyles.top;
+        localVideo.style.border = remoteStyles.border;
+        localVideo.style.borderRadius = remoteStyles.borderRadius;
+        localVideo.style.objectFit = remoteStyles.objectFit;
+        localVideo.style.position = remoteStyles.position;
+        localVideo.style.bottom = remoteStyles.bottom;
+        localVideo.style.right = remoteStyles.right;
+        localVideo.style.maxWidth = remoteStyles.maxWidth;
+        localVideo.style.maxHeight = remoteStyles.maxHeight;
+        localVideo.style.zIndex = remoteStyles.zIndex;
+        localVideo.style.cursor = remoteStyles.cursor;
+        localVideo.style.boxShadow = remoteStyles.boxShadow;
+
+        // Apply local styles to remoteVideo
+        remoteVideo.style.width = localStyles.width;
+        remoteVideo.style.height = localStyles.height;
+        remoteVideo.style.top = localStyles.top;
+        remoteVideo.style.border = localStyles.border;
+        remoteVideo.style.borderRadius = localStyles.borderRadius;
+        remoteVideo.style.objectFit = localStyles.objectFit;
+        remoteVideo.style.position = localStyles.position;
+        remoteVideo.style.bottom = localStyles.bottom;
+        remoteVideo.style.right = localStyles.right;
+        remoteVideo.style.maxWidth = localStyles.maxWidth;
+        remoteVideo.style.maxHeight = localStyles.maxHeight;
+        remoteVideo.style.zIndex = localStyles.zIndex;
+        remoteVideo.style.cursor = localStyles.cursor;
+        remoteVideo.style.boxShadow = localStyles.boxShadow;
+    }
+
+        window.addEventListener('DOMContentLoaded', () => {
+    setcss1();
+
+  
+});
+
         </script>
 </body>
 </html>
