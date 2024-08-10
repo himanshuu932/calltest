@@ -43,7 +43,7 @@
 
     .video-label {
         position: absolute;
-        background-color: transparent; /* Semi-transparent background */
+        /* Semi-transparent background */
         color: #fff;
         padding: 5px 10px;
         border-radius: 5px;
@@ -51,16 +51,18 @@
         font-weight: bold;
         backdrop-filter: blur(5px); /* Optional blur effect */
     }
-    #remote-label {
-        bottom: 10%;
-        left: 10px;
-        z-index: 100;
-    }
-    #local-label {
-        bottom: 10%;
-        right: 10px;
-        z-index: 100;
-    }
+    #call-duration {
+    position: absolute; /* Absolute positioning */
+ top: 10px; /* Adjust distance from the top as needed */
+    right: 50%; /* Align to the right */
+    z-index: 200; /* Ensure it's above other elements */
+    font-size: 12px; /* Adjust font size as needed */
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background 
+    padding: 5px 10px; /* Padding for better readability */
+    border-radius: 5px; /* Rounded corners for background */
+    color: white; /* White text color */
+}
+  
     #controls {
         display: flex;
         flex-direction: row;
@@ -120,7 +122,7 @@
     right: 20px; /* Center horizontally */
     transform: translate(-10%, -30%); /* Center label inside local video */
     z-index: 100;
-    background-color: rgba(255, 0, 0, 0.7); /* Red background for visibility */
+    /* Red background for visibility */
     padding: 5px 10px; /* Padding for better visibility */
 }
 
@@ -129,7 +131,7 @@
     left: 50%; /* Center horizontally */
     transform: translate(-50%, -50%); /* Center label inside remote video */
     z-index: 100;
-    background-color: rgba(255, 0, 0, 0.7); /* Red background for visibility */
+   /* Red background for visibility */
     padding: 5px 10px; /* Padding for better visibility */
 }
     #popup-menu {
@@ -151,11 +153,12 @@
   
     <div id="popup-menu">
         <div id="video-container">
+            <div id="call-duration">00:00</div>
             <div id="video-section">
                 <video id="remote-video" autoplay></video>
-                <div id="remote-label" class="video-label">Remote</div>
+                
                 <video id="local-video" autoplay muted></video>
-                <div id="local-label" class="video-label">Me</div>
+             
                 <div id="local-muted-label" class="video-label" style="display: none;">Muted</div>
                 <div id="remote-muted-label" class="video-label" style="display: none;">Muted</div>
             </div>
@@ -164,7 +167,8 @@
                 <button id="mute-audio-button" style="display: none;">
                     MUTE
                   </button>
-                  
+                   <!-- Added duration display -->
+
                 <button id="stop-video-button" style="display: none;">Stop Video</button>
             </div>
         </div>
@@ -181,7 +185,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script >
+    <script > 
         const socket = io();
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
@@ -195,7 +199,30 @@
         const localMutedLabel = document.getElementById('local-muted-label');
         
         const roomId = '12'; // Predefined room ID
+        const popupMenu = document.getElementById('popup-menu');
+        let isDragging = false;
+        let offsetX, offsetY;
         
+        popupMenu.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - popupMenu.getBoundingClientRect().left;
+            offsetY = e.clientY - popupMenu.getBoundingClientRect().top;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+        
+        function onMouseMove(e) {
+            if (isDragging) {
+                popupMenu.style.left = `${e.clientX - offsetX}px`;
+                popupMenu.style.top = `${e.clientY - offsetY}px`;
+            }
+        }
+        
+        function onMouseUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
         let localStream;
         let peerConnection;
         const configuration = {
@@ -337,6 +364,7 @@
                             const answer = await peerConnection.createAnswer();
                             await peerConnection.setLocalDescription(answer);
                             socket.emit('answer', roomId, answer);
+                           
                             modal.style.display = 'none'; // Hide the modal
                             callPending = false;
                             if (!called) {
@@ -362,7 +390,7 @@
         });
         
         socket.on('answer', async (answer) => {
-            
+            startCallDuration();
             try {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             } catch (error) {
@@ -379,9 +407,6 @@
         });
         async function changelabel()
         {
-            const tempLabel = document.getElementById('local-label').textContent;
-            document.getElementById('local-label').textContent = document.getElementById('remote-label').textContent;
-            document.getElementById('remote-label').textContent = tempLabel;
             if(mute && off)
            { document.getElementById('local-muted-label').style.display= document.getElementById('local-muted-label').style.display==='none'?'flex':'none';
             document.getElementById('remote-muted-label').textContent = 'video audio off';
@@ -404,16 +429,23 @@
         
         } 
         localVideo.addEventListener('click', () => {
-            
-            activescreen1=activescreen1===true?false:true;
+            if(!activescreen1)
+            return 
+            activescreen1=!activescreen1;
            changelabel();
-         try {
-            swapStyles();
-         } catch (error) {
-            alert(error)
-         }
+           swapStyles();
+         
         });
-       let mute=false;
+        remoteVideo.addEventListener('click', () => {
+            if(activescreen1)
+            return 
+            activescreen1=!activescreen1;
+           changelabel();
+           swapStyles();
+         
+        });
+        
+        let mute=false;
         let off=false;
         let activescreen1=true;
         
@@ -480,33 +512,33 @@
         // Handle hangup event from server
         socket.on('hangup', () => {
           
-            
+            stopCallDuration();
             location.reload(); 
         });
         function setcss1(){
           // Set CSS properties for remote video
-    remoteVideo.style.width = '100%';
-    remoteVideo.style.height = '90%';
-    remoteVideo.style.top = '0';
-    remoteVideo.style.border = '2px solid #fff';
-    remoteVideo.style.borderRadius = '15px'; // Rounded corners
-    remoteVideo.style.objectFit = 'cover'; // Ensure the video covers the container
-
-    // Set CSS properties for local video
-    localVideo.style.position = 'absolute';
-    localVideo.style.bottom = '10%'; // Position from the bottom
-    localVideo.style.right = '10px'; // Position from the right
-    localVideo.style.maxWidth = '30%'; // Maximum width as a percentage of the container
-    localVideo.style.maxHeight = '30%'; // Maximum height as a percentage of the container
-    localVideo.style.border = '2px solid #fff';
-    localVideo.style.borderRadius = '15px'; // Rounded corners
-    localVideo.style.zIndex = '10'; // Ensure local video is on top
-    localVideo.style.cursor = 'pointer'; // Show that this element is clickable
-    localVideo.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.5)'; // Shadow for local video
-    localVideo.style.objectFit = 'contain'; // Maintain aspect ratio
-    }
-
-    function swapStyles() {
+        remoteVideo.style.width = '100%';
+        remoteVideo.style.height = '90%';
+        remoteVideo.style.top = '0';
+        remoteVideo.style.border = '2px solid #fff';
+        remoteVideo.style.borderRadius = '15px'; // Rounded corners
+        remoteVideo.style.objectFit = 'cover'; // Ensure the video covers the container
+        
+        // Set CSS properties for local video
+        localVideo.style.position = 'absolute';
+        localVideo.style.bottom = '10%'; // Position from the bottom
+        localVideo.style.right = '10px'; // Position from the right
+        localVideo.style.maxWidth = '30%'; // Maximum width as a percentage of the container
+        localVideo.style.maxHeight = '30%'; // Maximum height as a percentage of the container
+        localVideo.style.border = '2px solid #fff';
+        localVideo.style.borderRadius = '15px'; // Rounded corners
+        localVideo.style.zIndex = '10'; // Ensure local video is on top
+        localVideo.style.cursor = 'pointer'; // Show that this element is clickable
+        localVideo.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.5)'; // Shadow for local video
+        localVideo.style.objectFit = 'contain'; // Maintain aspect ratio
+        }
+        
+        function swapStyles() {
         // Get current styles
         const remoteStyles = {
             width: remoteVideo.style.width,
@@ -524,7 +556,7 @@
             cursor: remoteVideo.style.cursor,
             boxShadow: remoteVideo.style.boxShadow
         };
-
+        
         const localStyles = {
             width: localVideo.style.width,
             height: localVideo.style.height,
@@ -541,7 +573,7 @@
             cursor: localVideo.style.cursor,
             boxShadow: localVideo.style.boxShadow
         };
-
+        
         // Apply remote styles to localVideo
         localVideo.style.width = remoteStyles.width;
         localVideo.style.height = remoteStyles.height;
@@ -557,7 +589,7 @@
         localVideo.style.zIndex = remoteStyles.zIndex;
         localVideo.style.cursor = remoteStyles.cursor;
         localVideo.style.boxShadow = remoteStyles.boxShadow;
-
+        
         // Apply local styles to remoteVideo
         remoteVideo.style.width = localStyles.width;
         remoteVideo.style.height = localStyles.height;
@@ -573,14 +605,37 @@
         remoteVideo.style.zIndex = localStyles.zIndex;
         remoteVideo.style.cursor = localStyles.cursor;
         remoteVideo.style.boxShadow = localStyles.boxShadow;
-    }
-
+        }
+        
         window.addEventListener('DOMContentLoaded', () => {
-    setcss1();
-
-  
-});
-
+        setcss1();
+        
+        
+        });
+        
+        let callStartTime;
+        let callDurationInterval;
+        
+        function updateCallDuration() {
+            const now = new Date();
+            const duration = new Date(now - callStartTime);
+        
+            const minutes = String(duration.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(duration.getUTCSeconds()).padStart(2, '0');
+        
+            document.getElementById('call-duration').textContent = `${minutes}:${seconds}`;
+        }
+        
+        function startCallDuration() {
+            callStartTime = new Date();
+            callDurationInterval = setInterval(updateCallDuration, 1000);
+        }
+        
+        function stopCallDuration() {
+            clearInterval(callDurationInterval);
+        }
+        
+        
         </script>
 </body>
 </html>
